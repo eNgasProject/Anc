@@ -13,51 +13,58 @@ body {
     min-height: 100vh;
 }
 
+/* Fixed header */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+
+.header .logo {
+    font-size: 1.4em;
+    font-weight: bold;
+}
+
 /* Menu button */
 .menu-btn {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    background-color: #4CAF50;
+    background-color: #45a049;
     color: white;
     border: none;
     border-radius: 4px;
     padding: 8px 12px;
     cursor: pointer;
-    z-index: 1000;
     font-size: 16px;
 }
 
 /* Sidebar styling */
 .sidebar {
     position: fixed;
-    top: 0;
+    top: 60px; /* Below header */
     left: 0;
     width: 250px;
-    height: 100%;
+    height: calc(100% - 60px); /* Adjust for header */
     background-color: #4CAF50;
     color: white;
-    display: none; /* Hidden by default */
+    display: none;
     z-index: 999;
 }
 
-/* Active sidebar */
 .sidebar.active {
-    display: block; /* Show when active */
+    display: block;
 }
 
-/* Sidebar header */
+/* Sidebar header (no logo, as it's in main header) */
 .sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-header .logo {
-    font-size: 1.4em;
-    font-weight: bold;
 }
 
 /* Close button */
@@ -67,6 +74,8 @@ body {
     color: white;
     cursor: pointer;
     font-size: 16px;
+    width: 100%;
+    text-align: left;
 }
 
 /* Sidebar navigation links */
@@ -106,9 +115,9 @@ body {
     display: block;
 }
 
-/* Screen container */
+/* Screen container with padding for header */
 .screen {
-    padding: 20px;
+    padding: 80px 20px 20px; /* Top padding for header */
     max-width: 800px;
     margin: 0 auto;
 }
@@ -213,5 +222,11 @@ audio, video, img {
     .matching-container {
         grid-template-columns: 1fr;
         gap: 10px;
+    }
+    .header {
+        padding: 10px;
+    }
+    .screen {
+        padding-top: 70px;
     }
 }
