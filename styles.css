@@ -1,9 +1,9 @@
-/* Reset default styles for consistency */
+/* Reset default styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif; /* Simplified font stack */
+    font-family: 'Arial', sans-serif;
 }
 
 /* Body styling */
@@ -13,7 +13,7 @@ body {
     min-height: 100vh;
 }
 
-/* Menu button (top-left toggle) */
+/* Menu button */
 .menu-btn {
     position: fixed;
     top: 10px;
@@ -37,17 +37,16 @@ body {
     height: 100%;
     background-color: #4CAF50;
     color: white;
-    transform: translateX(-100%) !important; /* Ensure hidden by default */
-    transition: transform 0.3s ease-in-out; /* Smooth slide */
+    display: none; /* Hidden by default */
     z-index: 999;
 }
 
-/* Active sidebar (visible) */
+/* Active sidebar */
 .sidebar.active {
-    transform: translateX(0) !important; /* Slide in */
+    display: block; /* Show when active */
 }
 
-/* Sidebar header (logo and close button) */
+/* Sidebar header */
 .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -91,7 +90,7 @@ body {
     background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Backdrop for closing sidebar */
+/* Backdrop */
 .backdrop {
     position: fixed;
     top: 0;
@@ -100,11 +99,11 @@ body {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 998;
-    display: none; /* Hidden by default */
+    display: none;
 }
 
 .backdrop.active {
-    display: block; /* Show when sidebar is active */
+    display: block;
 }
 
 /* Screen container */
@@ -116,10 +115,10 @@ body {
 
 /* Hidden elements */
 .hidden {
-    display: none !important;
+    display: none;
 }
 
-/* Word card styling */
+/* Word card */
 .word-card {
     background: white;
     border-radius: 8px;
@@ -171,7 +170,7 @@ audio, video, img {
     margin-bottom: 20px;
 }
 
-/* Word matching quiz container */
+/* Word matching quiz */
 .matching-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -184,7 +183,6 @@ audio, video, img {
     gap: 10px;
 }
 
-/* Matching quiz words */
 .matching-word {
     background: white;
     padding: 10px;
