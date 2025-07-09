@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learn Ngas</title>
     <link rel="stylesheet" href="/styles.css">
+    <script>
+        // Fallback toggleSidebar if app.js fails
+        function toggleSidebar() {
+            try {
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('backdrop');
+                if (sidebar && backdrop) {
+                    sidebar.classList.toggle('active');
+                    backdrop.classList.toggle('active');
+                    console.log('Fallback toggleSidebar:', sidebar.classList.contains('active') ? 'Open' : 'Closed');
+                }
+            } catch (error) {
+                console.error('Fallback toggleSidebar error:', error);
+            }
+        }
+    </script>
 </head>
 <body>
     <!-- Sidebar -->
