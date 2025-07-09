@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+  command = ""
+
+# Redirect to handle potential path issues
+[[redirects]]
+  from = "/data.json"
+  to = "/data.json"
+  status = 200
