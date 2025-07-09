@@ -1,359 +1,500 @@
-// Log to confirm app.js is loaded
-console.log('app.js loaded');
-
+// Learn Ngas - Main Application Script
 // Global state variables
-let words = []; // Array to store JSON data
-let wotdIndex = 0; // Index for Word of the Day
-let flashcardIndex = 0; // Current flashcard index
-let quizIndex = 0; // Current quiz question index
-let quizCorrectAnswer = ''; // Correct answer for multiple-choice quiz
-let flashcardFlipped = false; // Tracks if flashcard is flipped
-let quizType = 'multiple-choice'; // Current quiz type
-let matchingWords = []; // Words for matching quiz
-let selectedNgas = null; // Selected Ngas word in matching quiz
-let selectedEnglish = null; // Selected English word in matching quiz
-let matchedPairs = []; // Tracks matched pairs in matching quiz
+const appState = {
+  words: [],               // Array to store vocabulary data
+  wotdIndex: 0,            // Index for Word of the Day
+  flashcardIndex: 0,       // Current flashcard index
+  quizIndex: 0,            // Current quiz question index
+  quizCorrectAnswer: '',   // Correct answer for current quiz question
+  flashcardFlipped: false, // Tracks flashcard flip state
+  quizType: 'multiple-choice', // Current quiz type
+  matchingWords: [],       // Words for matching quiz
+  selectedNgas: null,      // Selected Ngas word in matching quiz
+  selectedEnglish: null,   // Selected English word in matching quiz
+  matchedPairs: []         // Correctly matched pairs in matching quiz
+};
 
-// Toggles the sidebar visibility
-function toggleSidebar() {
-    try {
-        const sidebar = document.getElementById('sidebar');
-        const backdrop = document.getElementById('backdrop');
-        if (!sidebar || !backdrop) throw new Error('Sidebar or backdrop element not found');
-        sidebar.classList.toggle('active');
-        backdrop.classList.toggle('active');
-        console.log('Sidebar toggled:', sidebar.classList.contains('active') ? 'Open' : 'Closed');
-    } catch (error) {
-        console.error('Sidebar toggle error:', error);
-    }
+// DOM Elements
+const domElements = {
+  sidebar: null,
+  backdrop: null,
+  // We'll initialize these in initDOMElements()
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+  initDOMElements();
+  loadData()
+    .then(() => {
+      console.log('Application initialized successfully');
+    })
+    .catch(error => {
+      console.error('Failed to initialize application:', error);
+      showError('Failed to load application. Please refresh the page.');
+    });
+});
+
+// Initialize DOM element references
+function initDOMElements() {
+  domElements.sidebar = document.getElementById('sidebar');
+  domElements.backdrop = document.getElementById('backdrop');
+  // Add more element references as needed
 }
 
-// Loads JSON data with retry
-async function loadData(retries = 3, delay = 1000) {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-            console.log(`Fetching /data.json (attempt ${attempt}/${retries})...`);
-            const response = await fetch('/data.json', { cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}, URL: ${response.url}`);
-            words = await response.json();
-            if (!Array.isArray(words) || words.length === 0) throw new Error('Invalid or empty JSON data');
-            console.log('Data loaded:', words.length, 'words');
-            initApp();
-            return;
-        } catch (error) {
-            console.error(`Load data error (attempt ${attempt}):`, error);
-            if (attempt === retries) {
-                alert('Failed to load vocabulary data after multiple attempts. Please try again later.');
-            } else {
-                await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retry
-            }
-        }
+// Load vocabulary data from JSON file
+async function loadData() {
+  try {
+    const response = await fetch('data.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+    appState.words = await response.json();
+    initApp();
+  } catch (error) {
+    console.error('Error loading vocabulary data:', error);
+    throw error; // Re-throw to be caught by the caller
+  }
 }
 
-// Initializes the app
+// Initialize application after data is loaded
 function initApp() {
-    console.log('Initializing app...');
-    // Word of the Day
-    wotdIndex = Math.floor(Math.random() * words.length);
-    const wotd = words[wotdIndex];
-    document.getElementById('wotd-ngas').textContent = wotd.Ngas_Word || '';
-    document.getElementById('wotd-english').textContent = wotd.English || '';
-    document.getElementById('wotd-meaning').textContent = wotd.Meaning || '';
-    document.getElementById('wotd-example').textContent = wotd.Example || '';
-    document.getElementById('wotd-audio').src = wotd.Audio || '';
-    document.getElementById('wotd-image').src = wotd.Image || '';
-    document.getElementById('wotd-video').src = wotd.Video || '';
+  if (!appState.words || appState.words.length === 0) {
+    throw new Error('No vocabulary data loaded');
+  }
 
-    // Populate category filter
-    const categories = [...new Set(words.map(w => w.Category).filter(c => c))];
-    const categoryFilter = document.getElementById('category-filter');
-    categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat;
-        option.textContent = cat;
-        categoryFilter.appendChild(option);
-    });
-
-    // Display word list
-    displayWords(words);
+  // Initialize Word of the Day
+  initWordOfTheDay();
+  
+  // Initialize category filter
+  initCategoryFilter();
+  
+  // Display initial word list
+  displayWords(appState.words);
+  
+  // Register service worker for offline support
+  registerServiceWorker();
 }
 
-// Shows a specific screen
+// Initialize Word of the Day
+function initWordOfTheDay() {
+  appState.wotdIndex = Math.floor(Math.random() * appState.words.length);
+  const wotd = appState.words[appState.wotdIndex];
+  
+  document.getElementById('wotd-ngas').textContent = wotd.Ngas_Word;
+  document.getElementById('wotd-english').textContent = wotd.English;
+  document.getElementById('wotd-meaning').textContent = wotd.Meaning || 'No meaning available';
+  document.getElementById('wotd-example').textContent = wotd.Example || 'No example available';
+  
+  // Set media elements only if they exist
+  if (wotd.Audio) {
+    document.getElementById('wotd-audio').src = wotd.Audio;
+  }
+  if (wotd.Image) {
+    document.getElementById('wotd-image').src = wotd.Image;
+  }
+  if (wotd.Video) {
+    document.getElementById('wotd-video').src = wotd.Video;
+  }
+}
+
+// Initialize category filter dropdown
+function initCategoryFilter() {
+  const categories = [...new Set(appState.words.map(word => word.Category))];
+  const categoryFilter = document.getElementById('category-filter');
+  
+  // Clear existing options
+  categoryFilter.innerHTML = '<option value="">All Categories</option>';
+  
+  // Add category options
+  categories.forEach(category => {
+    if (category) { // Skip empty categories
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category;
+      categoryFilter.appendChild(option);
+    }
+  });
+}
+
+// Toggle sidebar visibility
+function toggleSidebar() {
+  domElements.sidebar.classList.toggle('active');
+  domElements.backdrop.classList.toggle('active');
+}
+
+// Show a specific screen and hide others
 function showScreen(screenId) {
-    try {
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.add('hidden');
-        });
-        const screen = document.getElementById(screenId);
-        if (!screen) throw new Error(`Screen ${screenId} not found`);
-        screen.classList.remove('hidden');
-        if (screenId === 'flashcards') startFlashcards();
-        if (screenId === 'quiz') startQuiz(quizType);
-        console.log(`Showing screen: ${screenId}`);
-    } catch (error) {
-        console.error('Show screen error:', error);
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(screen => {
+    screen.classList.add('hidden');
+  });
+  
+  // Show requested screen
+  const screen = document.getElementById(screenId);
+  if (screen) {
+    screen.classList.remove('hidden');
+    
+    // Initialize screen-specific functionality
+    switch (screenId) {
+      case 'flashcards':
+        startFlashcards();
+        break;
+      case 'quiz':
+        startQuiz(appState.quizType);
+        break;
     }
+  } else {
+    console.error(`Screen with ID ${screenId} not found`);
+  }
 }
 
-// Displays vocabulary list
+// Display vocabulary words in the list
 function displayWords(wordList) {
-    const wordListDiv = document.getElementById('word-list');
-    wordListDiv.innerHTML = '';
-    wordList.forEach((word, index) => {
-        const card = document.createElement('div');
-        card.className = 'word-card';
-        card.innerHTML = `
-            <h3>${word.Ngas_Word || ''}</h3>
-            <p>${word.English || ''}</p>
-            <audio controls src="${word.Audio || ''}"></audio>
-        `;
-        card.onclick = () => showWordDetail(index);
-        wordListDiv.appendChild(card);
-    });
+  const wordListDiv = document.getElementById('word-list');
+  wordListDiv.innerHTML = ''; // Clear existing list
+  
+  wordList.forEach((word, index) => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.innerHTML = `
+      <h3>${word.Ngas_Word}</h3>
+      <p>${word.English}</p>
+      ${word.Audio ? `<audio controls src="${word.Audio}"></audio>` : ''}
+    `;
+    card.addEventListener('click', () => showWordDetail(index));
+    wordListDiv.appendChild(card);
+  });
 }
 
-// Filters words
+// Filter words based on search and category
 function filterWords() {
-    const search = document.getElementById('search').value.toLowerCase();
-    const category = document.getElementById('category-filter').value;
-    const filtered = words.filter(word => 
-        (word.Ngas_Word?.toLowerCase().includes(search) || 
-         word.English?.toLowerCase().includes(search) || 
-         word.Meaning?.toLowerCase().includes(search)) &&
-        (!category || word.Category === category)
-    );
-    displayWords(filtered);
+  const searchTerm = document.getElementById('search').value.toLowerCase();
+  const category = document.getElementById('category-filter').value;
+  
+  const filtered = appState.words.filter(word => {
+    const matchesSearch = 
+      word.Ngas_Word.toLowerCase().includes(searchTerm) || 
+      word.English.toLowerCase().includes(searchTerm) ||
+      (word.Meaning && word.Meaning.toLowerCase().includes(searchTerm));
+    
+    const matchesCategory = !category || word.Category === category;
+    
+    return matchesSearch && matchesCategory;
+  });
+  
+  displayWords(filtered);
 }
 
-// Shows word details
+// Show detailed view for a word
 function showWordDetail(index) {
-    const word = words[index];
-    document.getElementById('detail-ngas').textContent = word.Ngas_Word || '';
-    document.getElementById('detail-english').textContent = word.English || '';
-    document.getElementById('detail-pos').textContent = word.Part_of_Speech || '';
-    document.getElementById('detail-meaning').textContent = word.Meaning || '';
-    document.getElementById('detail-example').textContent = word.Example || '';
-    document.getElementById('detail-usage').textContent = word.Usage || '';
-    document.getElementById('detail-notes').textContent = word.Notes || '';
-    document.getElementById('detail-plural').textContent = word.Plural || '';
-    document.getElementById('detail-synonyms').textContent = word.Synonyms || '';
-    document.getElementById('detail-opposite').textContent = word.Opposite || '';
-    document.getElementById('detail-dialect').textContent = word.Dialect || '';
-    document.getElementById('detail-tone').textContent = word.Tone || '';
-    document.getElementById('detail-audio').src = word.Audio || '';
-    document.getElementById('detail-image').src = word.Image || '';
-    document.getElementById('detail-video').src = word.Video || '';
-    showScreen('word-detail');
+  const word = appState.words[index];
+  
+  // Set text content
+  document.getElementById('detail-ngas').textContent = word.Ngas_Word;
+  document.getElementById('detail-english').textContent = word.English;
+  document.getElementById('detail-pos').textContent = word.Part_of_Speech || 'N/A';
+  
+  // Set optional fields with fallbacks
+  const setDetail = (id, value, fallback = 'N/A') => {
+    document.getElementById(id).textContent = value || fallback;
+  };
+  
+  setDetail('detail-meaning', word.Meaning);
+  setDetail('detail-example', word.Example);
+  setDetail('detail-usage', word.Usage);
+  setDetail('detail-notes', word.Notes);
+  setDetail('detail-plural', word.Plural);
+  setDetail('detail-synonyms', word.Synonyms);
+  setDetail('detail-opposite', word.Opposite);
+  setDetail('detail-dialect', word.Dialect);
+  setDetail('detail-tone', word.Tone);
+  
+  // Set media elements
+  const audioElement = document.getElementById('detail-audio');
+  audioElement.src = word.Audio || '';
+  audioElement.style.display = word.Audio ? 'block' : 'none';
+  
+  const imgElement = document.getElementById('detail-image');
+  imgElement.src = word.Image || '';
+  imgElement.style.display = word.Image ? 'block' : 'none';
+  
+  const videoElement = document.getElementById('detail-video');
+  videoElement.src = word.Video || '';
+  videoElement.style.display = word.Video ? 'block' : 'none';
+  
+  showScreen('word-detail');
 }
 
-// Starts flashcards
+// Flashcard functionality
 function startFlashcards() {
-    flashcardIndex = 0;
-    flashcardFlipped = false;
-    showFlashcard();
+  appState.flashcardIndex = 0;
+  appState.flashcardFlipped = false;
+  showFlashcard();
 }
 
-// Displays current flashcard
 function showFlashcard() {
-    const word = words[flashcardIndex];
-    document.getElementById('flashcard-word').textContent = word.Ngas_Word || '';
-    document.getElementById('flashcard-back').textContent = `${word.English || ''} - ${word.Meaning || ''}`;
-    document.getElementById('flashcard-audio').src = word.Audio || '';
-    document.getElementById('flashcard-back').classList.add('hidden');
-    document.getElementById('flashcard-audio').classList.add('hidden');
-    flashcardFlipped = false;
+  const word = appState.words[appState.flashcardIndex];
+  const flashcardWord = document.getElementById('flashcard-word');
+  const flashcardBack = document.getElementById('flashcard-back');
+  const flashcardAudio = document.getElementById('flashcard-audio');
+  
+  flashcardWord.textContent = word.Ngas_Word;
+  flashcardBack.textContent = `${word.English} - ${word.Meaning || 'No meaning available'}`;
+  flashcardAudio.src = word.Audio || '';
+  
+  flashcardBack.classList.add('hidden');
+  flashcardAudio.classList.add('hidden');
+  appState.flashcardFlipped = false;
 }
 
-// Flips flashcard
 function flipFlashcard() {
-    flashcardFlipped = !flashcardFlipped;
-    document.getElementById('flashcard-back').classList.toggle('hidden', !flashcardFlipped);
-    document.getElementById('flashcard-audio').classList.toggle('hidden', !flashcardFlipped);
+  appState.flashcardFlipped = !appState.flashcardFlipped;
+  document.getElementById('flashcard-back').classList.toggle('hidden', !appState.flashcardFlipped);
+  document.getElementById('flashcard-audio').classList.toggle('hidden', !appState.flashcardFlipped);
 }
 
-// Next flashcard
 function nextFlashcard() {
-    flashcardIndex = (flashcardIndex + 1) % words.length;
-    showFlashcard();
+  appState.flashcardIndex = (appState.flashcardIndex + 1) % appState.words.length;
+  showFlashcard();
 }
 
-// Mark flashcard as known
 function markKnown() {
-    nextFlashcard();
+  // In a more advanced version, we would track known words
+  nextFlashcard();
 }
 
-// Mark flashcard as unknown
 function markUnknown() {
-    nextFlashcard();
+  // In a more advanced version, we would track difficult words
+  nextFlashcard();
 }
 
-// Starts quiz
+// Quiz functionality
 function startQuiz(type) {
-    quizType = type;
-    quizIndex = 0;
-    matchedPairs = [];
-    selectedNgas = null;
-    selectedEnglish = null;
-    document.getElementById('multiple-choice-quiz').classList.toggle('hidden', type !== 'multiple-choice');
-    document.getElementById('matching-quiz').classList.toggle('hidden', type !== 'matching');
-    if (type === 'multiple-choice') {
-        showQuizQuestion();
-    } else {
-        startMatchingQuiz();
-    }
+  appState.quizType = type;
+  appState.quizIndex = 0;
+  appState.matchedPairs = [];
+  appState.selectedNgas = null;
+  appState.selectedEnglish = null;
+  
+  document.getElementById('multiple-choice-quiz').classList.toggle('hidden', type !== 'multiple-choice');
+  document.getElementById('matching-quiz').classList.toggle('hidden', type !== 'matching');
+  
+  if (type === 'multiple-choice') {
+    showQuizQuestion();
+  } else {
+    startMatchingQuiz();
+  }
 }
 
-// Displays multiple-choice quiz question
 function showQuizQuestion() {
-    const word = words[quizIndex];
-    quizCorrectAnswer = word.English;
-    document.getElementById('quiz-question').textContent = `What is "${word.Ngas_Word || ''}" in English?`;
-    const options = [word.English];
-    while (options.length < 4) {
-        const randomWord = words[Math.floor(Math.random() * words.length)].English;
-        if (!options.includes(randomWord)) options.push(randomWord);
+  const word = appState.words[appState.quizIndex];
+  appState.quizCorrectAnswer = word.English;
+  
+  document.getElementById('quiz-question').textContent = `What is "${word.Ngas_Word}" in English?`;
+  
+  // Generate options (1 correct + 3 random)
+  const options = [word.English];
+  while (options.length < 4) {
+    const randomWord = appState.words[Math.floor(Math.random() * appState.words.length)].English;
+    if (!options.includes(randomWord)) {
+      options.push(randomWord);
     }
-    shuffleArray(options);
-    const optionsDiv = document.getElementById('quiz-options');
-    optionsDiv.innerHTML = '';
-    options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.textContent = opt || '';
-        btn.onclick = () => selectAnswer(opt);
-        optionsDiv.appendChild(btn);
-    });
-    document.getElementById('quiz-feedback').classList.add('hidden');
-    document.getElementById('quiz-submit').classList.remove('hidden');
-    document.getElementById('quiz-submit').textContent = 'Submit';
-    document.getElementById('quiz-submit').onclick = submitAnswer;
+  }
+  
+  // Shuffle options
+  shuffleArray(options);
+  
+  // Display options
+  const optionsDiv = document.getElementById('quiz-options');
+  optionsDiv.innerHTML = '';
+  
+  options.forEach(option => {
+    const button = document.createElement('button');
+    button.textContent = option;
+    button.addEventListener('click', () => selectAnswer(option));
+    optionsDiv.appendChild(button);
+  });
+  
+  // Reset UI state
+  document.getElementById('quiz-feedback').classList.add('hidden');
+  const submitButton = document.getElementById('quiz-submit');
+  submitButton.textContent = 'Submit';
+  submitButton.onclick = submitAnswer;
 }
 
-// Handles multiple-choice answer
 function selectAnswer(answer) {
-    const buttons = document.getElementById('quiz-options').getElementsByTagName('button');
-    for (let btn of buttons) btn.disabled = true;
-    document.getElementById('quiz-feedback').textContent = 
-        answer === quizCorrectAnswer ? 'Correct!' : `Wrong! Correct answer: ${quizCorrectAnswer}`;
-    document.getElementById('quiz-feedback').classList.remove('hidden');
-    document.getElementById('quiz-submit').textContent = 'Next';
-    document.getElementById('quiz-submit').onclick = () => {
-        quizIndex = (quizIndex + 1) % words.length;
-        showQuizQuestion();
-    };
+  const buttons = document.getElementById('quiz-options').querySelectorAll('button');
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+  
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.textContent = answer === appState.quizCorrectAnswer 
+    ? 'Correct!' 
+    : `Wrong! The correct answer is: ${appState.quizCorrectAnswer}`;
+  feedback.classList.remove('hidden');
+  
+  const submitButton = document.getElementById('quiz-submit');
+  submitButton.textContent = 'Next';
+  submitButton.onclick = () => {
+    appState.quizIndex = (appState.quizIndex + 1) % appState.words.length;
+    showQuizQuestion();
+  };
 }
 
-// Starts word matching quiz
+function submitAnswer() {
+  // This is just a placeholder - actual submission handled in selectAnswer
+  console.log('Answer submitted');
+}
+
+// Matching quiz functions
 function startMatchingQuiz() {
-    matchingWords = getRandomWords(5);
-    matchedPairs = [];
-    selectedNgas = null;
-    selectedEnglish = null;
-    displayMatchingQuiz();
-    document.getElementById('matching-feedback').classList.add('hidden');
+  appState.matchingWords = getRandomWords(5);
+  appState.matchedPairs = [];
+  appState.selectedNgas = null;
+  appState.selectedEnglish = null;
+  displayMatchingQuiz();
+  document.getElementById('matching-feedback').classList.add('hidden');
 }
 
-// Selects random words for matching quiz
 function getRandomWords(count) {
-    const shuffled = [...words].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, Math.min(count, words.length));
+  // Get unique random words
+  const shuffled = [...appState.words].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, appState.words.length));
 }
 
-// Displays word matching quiz
 function displayMatchingQuiz() {
-    const ngasDiv = document.getElementById('ngas-words');
-    const englishDiv = document.getElementById('english-words');
-    ngasDiv.innerHTML = '';
-    englishDiv.innerHTML = '';
-
-    const shuffledEnglish = [...matchingWords].sort(() => 0.5 - Math.random());
-    
-    matchingWords.forEach((word, index) => {
-        const ngasWord = document.createElement('div');
-        ngasWord.className = 'matching-word';
-        ngasWord.textContent = word.Ngas_Word || '';
-        ngasWord.dataset.index = index;
-        ngasWord.onclick = () => selectMatchingWord(ngasWord, word, 'ngas');
-        ngasDiv.appendChild(ngasWord);
-    });
-
-    shuffledEnglish.forEach((word, index) => {
-        const englishWord = document.createElement('div');
-        englishWord.className = 'matching-word';
-        englishWord.textContent = word.English || '';
-        englishWord.dataset.index = index;
-        englishWord.onclick = () => selectMatchingWord(englishWord, word, 'english');
-        englishDiv.appendChild(englishWord);
-    });
+  const ngasDiv = document.getElementById('ngas-words');
+  const englishDiv = document.getElementById('english-words');
+  
+  ngasDiv.innerHTML = '';
+  englishDiv.innerHTML = '';
+  
+  // Shuffle English words separately
+  const shuffledEnglish = [...appState.matchingWords].sort(() => Math.random() - 0.5);
+  
+  // Display Ngas words
+  appState.matchingWords.forEach((word, index) => {
+    const element = createMatchingWordElement(word.Ngas_Word, index, 'ngas');
+    ngasDiv.appendChild(element);
+  });
+  
+  // Display English words
+  shuffledEnglish.forEach((word, index) => {
+    const element = createMatchingWordElement(word.English, index, 'english');
+    englishDiv.appendChild(element);
+  });
 }
 
-// Handles word selection in matching quiz
+function createMatchingWordElement(text, index, type) {
+  const element = document.createElement('div');
+  element.className = 'matching-word';
+  element.textContent = text;
+  element.dataset.index = index;
+  
+  element.addEventListener('click', () => {
+    const word = appState.matchingWords[index];
+    selectMatchingWord(element, word, type);
+  });
+  
+  return element;
+}
+
 function selectMatchingWord(element, word, type) {
-    if (type === 'ngas') {
-        selectedNgas = { element, word, index: element.dataset.index };
-        element.classList.add('selected');
-        if (word.Audio) {
-            const audio = new Audio(word.Audio);
-            audio.play().catch(err => console.error('Audio error:', err));
-        }
-    } else {
-        selectedEnglish = { element, word, index: element.dataset.index };
-        element.classList.add('selected');
+  // Clear previous selection of the same type
+  if (type === 'ngas') {
+    if (appState.selectedNgas) {
+      appState.selectedNgas.element.classList.remove('selected');
     }
-
-    document.querySelectorAll('.matching-word').forEach(el => {
-        if (el !== selectedNgas?.element && el !== selectedEnglish?.element) {
-            el.classList.remove('selected');
-        }
-    });
-
-    if (selectedNgas && selectedEnglish) {
-        checkMatch();
-    }
-}
-
-// Checks matching quiz pairs
-function checkMatch() {
-    const feedback = document.getElementById('matching-feedback');
-    const isCorrect = selectedNgas.word.English === selectedEnglish.word.English;
+    appState.selectedNgas = { element, word, index: element.dataset.index };
+    element.classList.add('selected');
     
-    selectedNgas.element.classList.remove('selected');
-    selectedEnglish.element.classList.remove('selected');
-    selectedNgas.element.classList.add(isCorrect ? 'correct' : 'incorrect');
-    selectedEnglish.element.classList.add(isCorrect ? 'correct' : 'incorrect');
-
-    if (isCorrect) {
-        matchedPairs.push(selectedNgas.index);
-        selectedNgas.element.style.pointerEvents = 'none';
-        selectedEnglish.element.style.pointerEvents = 'none';
+    // Play audio if available
+    if (word.Audio) {
+      new Audio(word.Audio).play().catch(e => console.error('Audio error:', e));
     }
-
-    feedback.textContent = isCorrect ? 'Correct match!' : 'Incorrect match, try again!';
-    feedback.classList.remove('hidden');
-
-    selectedNgas = null;
-    selectedEnglish = null;
-
-    if (matchedPairs.length === Math.min(5, words.length)) {
-        feedback.textContent = 'All matches correct! Loading new set...';
-        setTimeout(startMatchingQuiz, 2000);
-    } else if (!isCorrect) {
-        setTimeout(() => {
-            document.querySelectorAll('.matching-word').forEach(el => {
-                el.classList.remove('incorrect');
-            });
-            feedback.classList.add('hidden');
-        }, 1000);
+  } else {
+    if (appState.selectedEnglish) {
+      appState.selectedEnglish.element.classList.remove('selected');
     }
+    appState.selectedEnglish = { element, word, index: element.dataset.index };
+    element.classList.add('selected');
+  }
+  
+  // If both selections are made, check for a match
+  if (appState.selectedNgas && appState.selectedEnglish) {
+    checkMatch();
+  }
 }
 
-// Shuffles array
+function checkMatch() {
+  const isCorrect = appState.selectedNgas.word.English === appState.selectedEnglish.word.English;
+  const feedback = document.getElementById('matching-feedback');
+  
+  // Visual feedback
+  appState.selectedNgas.element.classList.remove('selected');
+  appState.selectedEnglish.element.classList.remove('selected');
+  
+  if (isCorrect) {
+    appState.selectedNgas.element.classList.add('correct');
+    appState.selectedEnglish.element.classList.add('correct');
+    appState.matchedPairs.push(appState.selectedNgas.index);
+    
+    // Disable matched elements
+    appState.selectedNgas.element.style.pointerEvents = 'none';
+    appState.selectedEnglish.element.style.pointerEvents = 'none';
+    
+    feedback.textContent = 'Correct match!';
+  } else {
+    appState.selectedNgas.element.classList.add('incorrect');
+    appState.selectedEnglish.element.classList.add('incorrect');
+    feedback.textContent = 'Incorrect match, try again!';
+  }
+  
+  feedback.classList.remove('hidden');
+  
+  // Clear selections
+  appState.selectedNgas = null;
+  appState.selectedEnglish = null;
+  
+  // Check if all pairs are matched
+  if (isCorrect && appState.matchedPairs.length === appState.matchingWords.length) {
+    feedback.textContent = 'All matches correct! Loading new set...';
+    setTimeout(startMatchingQuiz, 2000);
+  } else if (!isCorrect) {
+    // Reset incorrect selections after delay
+    setTimeout(() => {
+      document.querySelectorAll('.matching-word.incorrect').forEach(el => {
+        el.classList.remove('incorrect');
+      });
+      feedback.classList.add('hidden');
+    }, 1000);
+  }
+}
+
+// Utility functions
 function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
-// Initialize app
-loadData();
+function showError(message) {
+  // In a real app, you'd have a proper error display system
+  alert(message);
+}
+
+// Service Worker Registration
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful:', registration);
+      })
+      .catch(error => {
+        console.error('ServiceWorker registration failed:', error);
+      });
+  }
+}
