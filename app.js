@@ -8,11 +8,11 @@ let flashcardIndex = 0; // Current flashcard index
 let quizIndex = 0; // Current quiz question index
 let quizCorrectAnswer = ''; // Correct answer for multiple-choice quiz
 let flashcardFlipped = false; // Tracks if flashcard is flipped
-let quizType = 'multiple-choice'; // Current quiz type (multiple-choice or matching)
+let quizType = 'multiple-choice'; // Current quiz type
 let matchingWords = []; // Words for matching quiz
 let selectedNgas = null; // Selected Ngas word in matching quiz
 let selectedEnglish = null; // Selected English word in matching quiz
-let matchedPairs = []; // Tracks correctly matched pairs in matching quiz
+let matchedPairs = []; // Tracks matched pairs in matching quiz
 
 // Toggles the sidebar visibility
 function toggleSidebar() {
@@ -20,31 +20,38 @@ function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const backdrop = document.getElementById('backdrop');
         if (!sidebar || !backdrop) throw new Error('Sidebar or backdrop element not found');
-        sidebar.classList.toggle('active'); // Show/hide sidebar
-        backdrop.classList.toggle('hidden'); // Show/hide backdrop
+        sidebar.classList.toggle('active');
+        backdrop.classList.toggle('active');
         console.log('Sidebar toggled:', sidebar.classList.contains('active') ? 'Open' : 'Closed');
     } catch (error) {
         console.error('Sidebar toggle error:', error);
     }
 }
 
-// Loads JSON data from /data.json
-async function loadData() {
-    try {
-        console.log('Fetching /data.json...');
-        const response = await fetch('/data.json', { cache: 'no-store' }); // Bypass cache
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}, URL: ${response.url}`);
-        words = await response.json(); // Parse JSON
-        if (!Array.isArray(words) || words.length === 0) throw new Error('Invalid or empty JSON data');
-        console.log('Data loaded:', words.length, 'words');
-        initApp(); // Initialize app
-    } catch (error) {
-        console.error('Error loading JSON:', error); // Detailed error logging
-        alert('Failed to load vocabulary data. Please try again later.');
+// Loads JSON data with retry
+async function loadData(retries = 3, delay = 1000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            console.log(`Fetching /data.json (attempt ${attempt}/${retries})...`);
+            const response = await fetch('/data.json', { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}, URL: ${response.url}`);
+            words = await response.json();
+            if (!Array.isArray(words) || words.length === 0) throw new Error('Invalid or empty JSON data');
+            console.log('Data loaded:', words.length, 'words');
+            initApp();
+            return;
+        } catch (error) {
+            console.error(`Load data error (attempt ${attempt}):`, error);
+            if (attempt === retries) {
+                alert('Failed to load vocabulary data after multiple attempts. Please try again later.');
+            } else {
+                await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retry
+            }
+        }
     }
 }
 
-// Initializes the app after JSON data is loaded
+// Initializes the app
 function initApp() {
     console.log('Initializing app...');
     // Word of the Day
@@ -58,7 +65,7 @@ function initApp() {
     document.getElementById('wotd-image').src = wotd.Image || '';
     document.getElementById('wotd-video').src = wotd.Video || '';
 
-    // Populate category filter dropdown
+    // Populate category filter
     const categories = [...new Set(words.map(w => w.Category).filter(c => c))];
     const categoryFilter = document.getElementById('category-filter');
     categories.forEach(cat => {
@@ -68,11 +75,11 @@ function initApp() {
         categoryFilter.appendChild(option);
     });
 
-    // Display initial word list
+    // Display word list
     displayWords(words);
 }
 
-// Shows a specific screen and hides others
+// Shows a specific screen
 function showScreen(screenId) {
     try {
         document.querySelectorAll('.screen').forEach(screen => {
@@ -89,7 +96,7 @@ function showScreen(screenId) {
     }
 }
 
-// Displays the vocabulary list
+// Displays vocabulary list
 function displayWords(wordList) {
     const wordListDiv = document.getElementById('word-list');
     wordListDiv.innerHTML = '';
@@ -106,7 +113,7 @@ function displayWords(wordList) {
     });
 }
 
-// Filters words based on search input and category
+// Filters words
 function filterWords() {
     const search = document.getElementById('search').value.toLowerCase();
     const category = document.getElementById('category-filter').value;
@@ -119,7 +126,7 @@ function filterWords() {
     displayWords(filtered);
 }
 
-// Shows detailed information for a selected word
+// Shows word details
 function showWordDetail(index) {
     const word = words[index];
     document.getElementById('detail-ngas').textContent = word.Ngas_Word || '';
@@ -140,14 +147,14 @@ function showWordDetail(index) {
     showScreen('word-detail');
 }
 
-// Starts the flashcard session
+// Starts flashcards
 function startFlashcards() {
     flashcardIndex = 0;
     flashcardFlipped = false;
     showFlashcard();
 }
 
-// Displays the current flashcard
+// Displays current flashcard
 function showFlashcard() {
     const word = words[flashcardIndex];
     document.getElementById('flashcard-word').textContent = word.Ngas_Word || '';
@@ -158,30 +165,30 @@ function showFlashcard() {
     flashcardFlipped = false;
 }
 
-// Flips the flashcard to show/hide back content
+// Flips flashcard
 function flipFlashcard() {
     flashcardFlipped = !flashcardFlipped;
     document.getElementById('flashcard-back').classList.toggle('hidden', !flashcardFlipped);
     document.getElementById('flashcard-audio').classList.toggle('hidden', !flashcardFlipped);
 }
 
-// Moves to the next flashcard
+// Next flashcard
 function nextFlashcard() {
     flashcardIndex = (flashcardIndex + 1) % words.length;
     showFlashcard();
 }
 
-// Marks a flashcard as known
+// Mark flashcard as known
 function markKnown() {
     nextFlashcard();
 }
 
-// Marks a flashcard as unknown
+// Mark flashcard as unknown
 function markUnknown() {
     nextFlashcard();
 }
 
-// Starts a quiz (multiple-choice or matching)
+// Starts quiz
 function startQuiz(type) {
     quizType = type;
     quizIndex = 0;
@@ -197,7 +204,7 @@ function startQuiz(type) {
     }
 }
 
-// Displays a multiple-choice quiz question
+// Displays multiple-choice quiz question
 function showQuizQuestion() {
     const word = words[quizIndex];
     quizCorrectAnswer = word.English;
@@ -222,7 +229,7 @@ function showQuizQuestion() {
     document.getElementById('quiz-submit').onclick = submitAnswer;
 }
 
-// Handles multiple-choice answer submission
+// Handles multiple-choice answer
 function selectAnswer(answer) {
     const buttons = document.getElementById('quiz-options').getElementsByTagName('button');
     for (let btn of buttons) btn.disabled = true;
@@ -236,7 +243,7 @@ function selectAnswer(answer) {
     };
 }
 
-// Starts the word matching quiz
+// Starts word matching quiz
 function startMatchingQuiz() {
     matchingWords = getRandomWords(5);
     matchedPairs = [];
@@ -246,13 +253,13 @@ function startMatchingQuiz() {
     document.getElementById('matching-feedback').classList.add('hidden');
 }
 
-// Selects 5 random words for matching quiz
+// Selects random words for matching quiz
 function getRandomWords(count) {
     const shuffled = [...words].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, Math.min(count, words.length));
 }
 
-// Displays the word matching quiz
+// Displays word matching quiz
 function displayMatchingQuiz() {
     const ngasDiv = document.getElementById('ngas-words');
     const englishDiv = document.getElementById('english-words');
@@ -305,7 +312,7 @@ function selectMatchingWord(element, word, type) {
     }
 }
 
-// Checks if selected Ngas and English words match
+// Checks matching quiz pairs
 function checkMatch() {
     const feedback = document.getElementById('matching-feedback');
     const isCorrect = selectedNgas.word.English === selectedEnglish.word.English;
@@ -340,7 +347,7 @@ function checkMatch() {
     }
 }
 
-// Shuffles an array for quiz options and matching words
+// Shuffles array
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -350,10 +357,3 @@ function shuffleArray(array) {
 
 // Initialize app
 loadData();
-
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('Service Worker Registered'))
-        .catch(err => console.error('Service Worker Error:', err));
-}
