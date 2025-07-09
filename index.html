@@ -6,7 +6,7 @@
     <title>Learn Ngas</title>
     <link rel="stylesheet" href="/styles.css">
     <script>
-        // Fallback toggleSidebar if app.js fails
+        // Fallback toggleSidebar
         function toggleSidebar() {
             try {
                 const sidebar = document.getElementById('sidebar');
@@ -23,10 +23,15 @@
     </script>
 </head>
 <body>
+    <!-- Fixed Header -->
+    <header class="header">
+        <span class="logo">Learn Ngas</span>
+        <button class="menu-btn" onclick="toggleSidebar()">Menu</button>
+    </header>
+
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar hidden">
         <div class="sidebar-header">
-            <span class="logo">Learn Ngas</span>
             <button class="close-btn" onclick="toggleSidebar()">Close</button>
         </div>
         <div class="sidebar-links">
@@ -37,13 +42,12 @@
         </div>
     </div>
     <div id="backdrop" class="backdrop hidden" onclick="toggleSidebar()"></div>
-    <button class="menu-btn" onclick="toggleSidebar()">Menu</button>
 
     <!-- Home Screen -->
     <section id="home" class="screen">
         <h2>Word of the Day</h2>
         <div id="wotd" class="word-card">
-            <h3 id="wotd-ngas"></h3>
+            <h3 id="wotd-ngas">Loading...</h3>
             <p id="wotd-english"></p>
             <audio id="wotd-audio" controls></audio>
             <img id="wotd-image" alt="Word image">
