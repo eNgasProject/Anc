@@ -1,98 +1,130 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learn Ngas</title>
-  <link rel="stylesheet" href="./styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Ngas</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script>
+        // Fallback toggleSidebar
+        function toggleSidebar() {
+            try {
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('backdrop');
+                if (sidebar && backdrop) {
+                    sidebar.classList.toggle('active');
+                    backdrop.classList.toggle('active');
+                    console.log('Fallback toggleSidebar:', sidebar.classList.contains('active') ? 'Open' : 'Closed');
+                }
+            } catch (error) {
+                console.error('Fallback toggleSidebar error:', error);
+            }
+        }
+    </script>
 </head>
 <body>
-  <header class="header">
-    <span class="logo">Learn Ngas</span>
-    <button class="menu-btn" onclick="toggleSidebar()">Menu</button>
-  </header>
+    <!-- Fixed Header -->
+    <header class="header">
+        <span class="logo">Learn Ngas</span>
+        <button class="menu-btn" onclick="toggleSidebar()">Menu</button>
+    </header>
 
-  <div id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-      <button class="close-btn" onclick="toggleSidebar()">Close</button>
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar hidden">
+        <div class="sidebar-header">
+            <button class="close-btn" onclick="toggleSidebar()">Close</button>
+        </div>
+        <div class="sidebar-links">
+            <button onclick="showScreen('home'); toggleSidebar()">Home</button>
+            <button onclick="showScreen('vocabulary'); toggleSidebar()">Vocabulary</button>
+            <button onclick="showScreen('flashcards'); toggleSidebar()">Flashcards</button>
+            <button onclick="showScreen('quiz'); toggleSidebar()">Quiz</button>
+        </div>
     </div>
-    <div class="sidebar-links">
-      <button onclick="showScreen('home'); toggleSidebar()">Home</button>
-      <button onclick="showScreen('vocabulary'); toggleSidebar()">Vocabulary</button>
-    </div>
-  </div>
-  <div id="backdrop" class="backdrop" onclick="toggleSidebar()"></div>
+    <div id="backdrop" class="backdrop hidden" onclick="toggleSidebar()"></div>
 
-  <section id="home" class="screen">
-    <h2>Word of the Day</h2>
-    <div class="word-card">
-      <h3 id="wotd-ngas">Loading...</h3>
-      <p id="wotd-english"></p>
-      <audio id="wotd-audio" controls></audio>
-      <img id="wotd-image" alt="Word image">
-      <p id="wotd-meaning"></p>
-    </div>
-  </section>
+    <!-- Home Screen -->
+    <section id="home" class="screen">
+        <h2>Word of the Day</h2>
+        <div id="wotd" class="word-card">
+            <h3 id="wotd-ngas">Loading...</h3>
+            <p id="wotd-english"></p>
+            <audio id="wotd-audio" controls></audio>
+            <img id="wotd-image" alt="Word image">
+            <video id="wotd-video" controls></video>
+            <p id="wotd-meaning"></p>
+            <p id="wotd-example"></p>
+            <button onclick="showWordDetail(wotdIndex)">View Details</button>
+        </div>
+    </section>
 
-  <section id="vocabulary" class="screen hidden">
-    <h2>Vocabulary</h2>
-    <input type="text" id="search" placeholder="Search...">
-    <div id="word-list"></div>
-  </section>
+    <!-- Vocabulary Screen -->
+    <section id="vocabulary" class="screen hidden">
+        <h2>Vocabulary</h2>
+        <input type="text" id="search" placeholder="Search words..." oninput="filterWords()">
+        <select id="category-filter" onchange="filterWords()">
+            <option value="">All Categories</option>
+        </select>
+        <div id="word-list"></div>
+    </section>
 
-  <script>
-    const appState = { words: [] };
+    <!-- Word Detail Screen -->
+    <section id="word-detail" class="screen hidden">
+        <button onclick="showScreen('vocabulary')">Back</button>
+        <h2 id="detail-ngas"></h2>
+        <p id="detail-english"></p>
+        <p id="detail-pos"></p>
+        <audio id="detail-audio" controls></audio>
+        <img id="detail-image" alt="Word image">
+        <video id="detail-video" controls></video>
+        <p><strong>Meaning:</strong> <span id="detail-meaning"></span></p>
+        <p><strong>Example:</strong> <span id="detail-example"></span></p>
+        <p><strong>Usage:</strong> <span id="detail-usage"></span></p>
+        <p><strong>Notes:</strong> <span id="detail-notes"></span></p>
+        <p><strong>Plural:</strong> <span id="detail-plural"></span></p>
+        <p><strong>Synonyms:</strong> <span id="detail-synonyms"></span></p>
+        <p><strong>Opposite:</strong> <span id="detail-opposite"></span></p>
+        <p><strong>Dialect:</strong> <span id="detail-dialect"></span></p>
+        <p><strong>Tone:</strong> <span id="detail-tone"></span></p>
+    </section>
 
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('active');
-      document.getElementById('backdrop').classList.toggle('active');
-    }
+    <!-- Flashcard Screen -->
+    <section id="flashcards" class="screen hidden">
+        <h2>Flashcards</h2>
+        <div id="flashcard" class="word-card">
+            <h3 id="flashcard-word"></h3>
+            <button onclick="flipFlashcard()">Flip</button>
+            <p id="flashcard-back" class="hidden"></p>
+            <audio id="flashcard-audio" controls class="hidden"></audio>
+        </div>
+        <button onclick="nextFlashcard()">Next</button>
+        <button onclick="markKnown()">Know</button>
+        <button onclick="markUnknown()">Don't Know</button>
+    </section>
 
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-    }
+    <!-- Quiz Screen -->
+    <section id="quiz" class="screen hidden">
+        <h2>Quiz</h2>
+        <div class="quiz-type-toggle">
+            <button onclick="startQuiz('multiple-choice')">Multiple Choice</button>
+            <button onclick="startQuiz('matching')">Word Matching</button>
+        </div>
+        <div id="multiple-choice-quiz">
+            <p id="quiz-question"></p>
+            <div id="quiz-options"></div>
+            <button id="quiz-submit" onclick="submitAnswer()">Submit</button>
+            <p id="quiz-feedback" class="hidden"></p>
+        </div>
+        <div id="matching-quiz" class="hidden">
+            <div class="matching-container">
+                <div id="ngas-words" class="ngas-words"></div>
+                <div id="english-words" class="english-words"></div>
+            </div>
+            <p id="matching-feedback" class="hidden"></p>
+        </div>
+    </section>
 
-    async function loadData() {
-      try {
-        const res = await fetch('./data.json');
-        if (!res.ok) throw new Error('Network response failed.');
-        const data = await res.json();
-        appState.words = data;
-        initWordOfTheDay();
-        displayWords(data);
-      } catch (e) {
-        alert('Failed to load data: ' + e.message);
-      }
-    }
-
-    function initWordOfTheDay() {
-      const word = appState.words[Math.floor(Math.random() * appState.words.length)];
-      document.getElementById('wotd-ngas').textContent = word.Ngas_Word;
-      document.getElementById('wotd-english').textContent = word.English;
-      document.getElementById('wotd-meaning').textContent = word.Meaning;
-      document.getElementById('wotd-audio').src = word.Audio || '';
-      document.getElementById('wotd-image').src = word.image || '';
-    }
-
-    function displayWords(words) {
-      const list = document.getElementById('word-list');
-      list.innerHTML = '';
-      words.forEach(w => {
-        const card = document.createElement('div');
-        card.className = 'word-card';
-        card.innerHTML = `<h3>${w.Ngas_Word}</h3><p>${w.English}</p>`;
-        list.appendChild(card);
-      });
-    }
-
-    document.getElementById('search').addEventListener('input', e => {
-      const term = e.target.value.toLowerCase();
-      const filtered = appState.words.filter(w => w.Ngas_Word.toLowerCase().includes(term) || w.English.toLowerCase().includes(term));
-      displayWords(filtered);
-    });
-
-    document.addEventListener('DOMContentLoaded', loadData);
-  </script>
+    <script src="./app.js"></script>
 </body>
 </html>
