@@ -43,18 +43,17 @@ function initDOMElements() {
 
 // Load vocabulary data from JSON file
 async function loadData() {
-  try {
-    const response = await fetch("https://engasproject.github.io/Anc/data.json");
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      try {
+        const res = await fetch('./data.json');
+        if (!res.ok) throw new Error('Network response failed.');
+        const data = await res.json();
+        appState.words = data;
+        initWordOfTheDay();
+        displayWords(data);
+      } catch (e) {
+        alert('Failed to load data: ' + e.message);
+      }
     }
-    appState.words = await response.json();
-    initApp();
-  } catch (error) {
-    console.error('Error loading vocabulary data:', error);
-    throw error; // Re-throw to be caught by the caller
-  }
-}
 
 // Initialize application after data is loaded
 function initApp() {
