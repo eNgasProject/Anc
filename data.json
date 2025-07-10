@@ -1,4 +1,5 @@
 [
+    
   {
     "Ngas_Word": "aha",
     "English": "like this",
@@ -19571,7 +19572,7 @@
   },
   {
     "Ngas_Word": "mbi zalng",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -22248,25 +22249,7 @@
     "Tone": "",
     "Notes": ""
   },
-  {
-    "Ngas_Word": NaN,
-    "English": NaN,
-    "Part_of_Speech": "Noun",
-    "Category": "Objects",
-    "Usage": "",
-    "Example": "",
-    "Meaning": "",
-    "Audio": "audio/nan.mp3",
-    "image": "image/nan.png",
-    "Video": "video/nan.mp4",
-    "Plural": "",
-    "Synonyms": "",
-    "Opposite": "",
-    "Alternate_Forms": "",
-    "Dialect": "_Ngas",
-    "Tone": "",
-    "Notes": ""
-  },
+ 
   {
     "Ngas_Word": "ne ki` coryɨt",
     "English": "being merciful",
@@ -22497,7 +22480,7 @@
   },
   {
     "Ngas_Word": "nezhi",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -25195,7 +25178,7 @@
   },
   {
     "Ngas_Word": "nshàng",
-    "English": NaN,
+    "English": "fishing net",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -26259,7 +26242,7 @@
   },
   {
     "Ngas_Word": "Nzhɨm",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -27912,7 +27895,7 @@
   },
   {
     "Ngas_Word": "pojam",
-    "English": NaN,
+    "English": "jaw",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -31940,7 +31923,7 @@
   },
   {
     "Ngas_Word": "shwe",
-    "English": NaN,
+    "English": "to wither",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -34010,7 +33993,7 @@
     "Notes": ""
   },
   {
-    "Ngas_Word": NaN,
+    "Ngas_Word": "ten kom",
     "English": "listening",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
@@ -34429,7 +34412,7 @@
   },
   {
     "Ngas_Word": "tɨng cwit",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -34486,7 +34469,7 @@
   },
   {
     "Ngas_Word": "tɨng gor",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -34619,7 +34602,7 @@
   },
   {
     "Ngas_Word": "tɨng yekut",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -34638,7 +34621,7 @@
   },
   {
     "Ngas_Word": "tɨng yɨm",
-    "English": NaN,
+    "English": "",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -37621,7 +37604,7 @@
   },
   {
     "Ngas_Word": "yɨm",
-    "English": NaN,
+    "English": "leaf",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
     "Usage": "",
@@ -37924,7 +37907,7 @@
     "Notes": ""
   },
   {
-    "Ngas_Word": NaN,
+    "Ngas_Word": "zar",
     "English": "cleansing",
     "Part_of_Speech": "Noun",
     "Category": "Objects",
