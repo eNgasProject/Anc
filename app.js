@@ -44,7 +44,7 @@ function initDOMElements() {
 // Load vocabulary data from JSON file
 async function loadData() {
   try {
-    const response = await fetch('https://ngasapp.netlify.app/data.json');
+    const response = await fetch('https://engasproject.github.io/Anc/data.json');
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
